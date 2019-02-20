@@ -1,0 +1,63 @@
+---
+title: "Time serise"
+author: "yamamoto"
+date: "2019年2月19日"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+```{r setup,include=F}
+knitr::opts_chunk$set(include = T,
+                      echo = T)
+```
+
+```{r packege,include=F}
+library(tidyverse)
+```
+
+#MR model
+
+$$
+\large MA(q)\\\
+\large y_{t} = \mu + \epsilon_{t}+\theta_{1}\epsilon_{t-1}\dots +\theta_{q}\epsilon_{t-q}\\\
+\large y_{t-1} = \mu + \epsilon_{t-1}+\theta_{1}\epsilon_{t-2}\dots +\theta_{q}\epsilon_{t-q-1}
+$$
+
+## MR(2)
+```{r sim}
+set.seed(123)
+eps <- rnorm(1000,0,0.5)
+
+y1 <- 1+eps[1]
+y2 <- 1+eps[2]+0.8*eps[1]
+MR2<-c(y1,y2,rep(NA,length(eps)-2))
+for(i in 1:(length(eps)-2)){
+  yt  <-1+eps[i+2]+0.8*eps[i+1]+-0.5*eps[i] 
+  MR2[i+2] <- yt
+}
+
+data.frame(x=1:length(eps),y=MR2) %>% 
+  ggplot(aes(x=x,y=y))+
+  geom_line()
+```
+
+```{r}
+acf(MR2)
+mean(MR2)
+```
+
+$$
+\rho_{1} = \dfrac{\theta_{1}+\theta_{1}\theta_{2}}{1+\theta_{1}^{2}+\theta_{2}^{2}}
+$$
+```{r}
+#rho 1
+(0.8+(-0.5*0.8))/(1+(0.8)^2+(-0.5)^2)
+
+#rho 2
+-0.5/(1+(0.8)^2+(-0.5)^2)
+```
+
+```{r}
+
+```
+
