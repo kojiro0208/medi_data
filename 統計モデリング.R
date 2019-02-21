@@ -116,24 +116,28 @@ for( h in c(1:1000)){
 }
 
 
-for( h in c(1:1000)){
-  train_x <- seq(1:100)
-  train_x2 <- rnorm(100,c(1:10) , 10)
-  train_y <- rnorm(100,train_x , 10)
-  
-  fit <- glm(train_y~train_x , family = gaussian)
-  l_list <- c()
-  for(i in c(1:200)){
-    test_y <- rnorm(100,train_x , 10)
+
+diff_l <- c()
+
+for(i in 1:100){
+  x_true <- rnorm(100,10,10)
+  y <- 5*x_true+rnorm(100,0,10)
+  fit <- lm(y~x_true)
+ 
+  l_vec <- c()
+  for(i in 1:100){
+    MSE <- fit$residuals^2 %>% mean() %>% sqrt()
+    y_sim <- fit$fitted.values+rnorm(100,0,MSE)
     
-    l_list <- c(l_list , max_l)
-  } 
-  meanl <- mean(l_list)
-  true_value <- sum(dpois(train_y , exp(fit$coefficients) , log = TRUE))
-  diff_l <- c(diff_l,true_value-meanl)
+    max_l <- dnorm(y_sim, fit$fitted.values , MSE ,log=T)%>% sum()
+    l_vec <- c(l_vec ,max_l)
+  }
   
+  meanl <- mean(l_vec)
+  true_l <- logLik(fit)
+  diff_l <- c(diff_l,true_l-meanl)
 }
-plot(train_x , fit$fitted.values)
+
 plot(density(diff_l))
 mean(diff_l)
 
