@@ -129,7 +129,6 @@ for(i in 1:50){
  
   l_vec <- c()
   for(i in 1:100){
-    x <- rnorm(50,10,10)
     x2 <- rnorm(50,40,10)
     x3 <- rnorm(50,40,10)
     y <- 5*x+rnorm(50,0,50)
@@ -150,8 +149,35 @@ mean(diff_l)
 AIC(fit)
 
 
-incom <- data(income)
-head(incom)
+#二項分布
+
+set.seed(1)
+diff_l <- c()
+for(i in 1:20){
+  n <-50
+  coin <- rbinom(n,1,0.3)
+  m <-sum(coin)
+  prob <- m/n
+  max_l <- log(choose(n,m))+m*log(prob)+(n-m)*log(1-prob)
+  
+  l_vec <- c()
+  for(i in 1:200){
+    coin <- rbinom(n,1,0.3)
+    m <-sum(coin)
+    l_vec <- c(l_vec,log(choose(n,m))+m*log(prob)+(n-m)*log(1-prob))
+  }
+  
+  diff_l <- c(diff_l,max_l-mean(l_vec))
+}
+mean(diff_l)
+
+
+caluc_l <- function(prob,n){
+    coin <- rbinom(n,1,0.3)
+    m <-sum(coin)
+    return(log(choose(n,m))+m*log(prob)+(n-m)*log(1-prob))
+  }
+
 
 #===5章====#
 
