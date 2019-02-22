@@ -118,30 +118,36 @@ for( h in c(1:1000)){
 
 
 diff_l <- c()
-
-for(i in 1:100){
-  x_true <- rnorm(100,10,10)
-  y <- 5*x_true+rnorm(100,0,10)
-  fit <- lm(y~x_true)
+set.seed(123)
+for(i in 1:50){
+  x <- rnorm(50,10,10)
+  x2 <- rnorm(50,40,10)
+  x3 <- rnorm(50,40,10)
+  y <- 5*x+rnorm(50,0,50)
+  fit <- lm(y~x+x2+x3)
+  sd <- sqrt(mean(fit$residuals^2)) 
  
   l_vec <- c()
   for(i in 1:100){
-    MSE <- fit$residuals^2 %>% mean() %>% sqrt()
-    y_sim <- fit$fitted.values+rnorm(100,0,MSE)
+    x <- rnorm(50,10,10)
+    x2 <- rnorm(50,40,10)
+    x3 <- rnorm(50,40,10)
+    y <- 5*x+rnorm(50,0,50)
     
-    max_l <- dnorm(y_sim, fit$fitted.values , MSE ,log=T)%>% sum()
+    max_l <- sum(dnorm(y, fit$coefficients[1]+fit$coefficients[2]*x+
+                     fit$coefficients[3]*x2+fit$coefficients[4]*x3, sd ,log=T))
     l_vec <- c(l_vec ,max_l)
   }
   
   meanl <- mean(l_vec)
-  true_l <- logLik(fit)
-  diff_l <- c(diff_l,true_l-meanl)
+  max_l <- logLik(fit)
+  diff_l <- c(diff_l,max_l-meanl)
 }
 
 plot(density(diff_l))
 mean(diff_l)
-
-
+-2*logLik(fit)+2*5
+AIC(fit)
 
 
 incom <- data(income)
