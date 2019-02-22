@@ -4,7 +4,7 @@ author: "yamamoto"
 date: "2019年2月19日"
 output: html_document
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 ```{r setup,include=F}
 knitr::opts_chunk$set(include = T,
@@ -13,6 +13,11 @@ knitr::opts_chunk$set(include = T,
 
 ```{r packege,include=F}
 library(tidyverse)
+library(lubridate)
+library(gridExtra)
+library(Nippon)
+library("nlme")
+
 ```
 
 #MR model
@@ -57,6 +62,69 @@ $$
 -0.5/(1+(0.8)^2+(-0.5)^2)
 ```
 
+```{r}
+denki <- read_csv("denryoku.csv",col_types = "?cdd",locale =locale(encoding="cp932"))
+denki$day<- ymd(denki$day)
+denki %>% 
+  map(~sum(is.na(.)))
+
+```
+
+```{r}
+grid.arrange(denki %>% 
+  ggplot(aes(x=day))+
+  geom_line(aes(y=demand/1000),col=2),
+  denki %>% 
+  ggplot(aes(x=day))+
+  geom_line(aes(y=temp)),nrow=2)
+ 
+```
+
+$$
+demand_{t} =\beta_{0}+\beta_{1}temp_{t}+\epsilon_{t}
+$$
+```{r}
+res<- lm(data=denki,demand~temp)
+res %>% summary()
+```
+
+```{r}
+denki <- denki %>%
+  mutate(holiday = ifelse(is.jholiday(day),1,0))
+
+res2 <- denki%>% 
+  lm(data=.,demand~temp+week+holiday)
+```
+## residuals plot
+
+```{r}
+data_frame(day = denki$day,residual=res$residuals,residual2 = res2$residuals ) %>% 
+  gather(key="model",value=residu, -day) %>% 
+  ggplot(aes(x=day,y=residu))+
+  geom_line(aes(linetype=model,col=model))
+```
+### 系列相関
+
+```{r}
+# before 1 preriod lag
+
+plot(res$residuals,lag(res$residuals))
+```
+```{r}
+#DW
+lmtest::dwtest(res) %>% broom::tidy() 
+#Breusch-Godfrey
+lmtest::bgtest(res,order=1) %>% broom::tidy() 
+```
+```{r}
+#Fgls
+gls <- denki %>% gls(data=.,demand~temp+week+holiday,correlation = corARMA(p=1))
+gls %>% summary()
+#NeweyWestの補正
+lmtest::coeftest(res2,vcov=sandwich::NeweyWest)
+
+```
+### 定常系列
 ```{r}
 
 ```
